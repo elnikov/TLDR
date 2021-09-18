@@ -1,3 +1,49 @@
+# Chapter 3. Varying the Algorithm with the Template Method 
+
+```ruby
+# Примитивный, не гибкий класс, для генерации html
+class Report 
+    def initialize 
+        @title = 'Monthly Report'
+        @text = ['Things are going', 'really, really well.' ]
+    end
+
+    def output
+        p '<html>'
+        p @title 
+        @text.each do |line| 
+            p line
+        end
+        p '</html>'
+    end
+end
+
+# Появились новые форматы, класс стал костыльным
+class Report 
+    def initialize 
+        @title = 'Monthly Report'
+        @text = ['Things are going', 'really, really well.' ]
+    end
+
+    def output(format)
+        #Большое кол-во IF
+        if format == :plain 
+            p @title 
+        elsif format == :html
+            p '<html>'
+            p @title 
+            @text.each do |line| 
+                p line
+            end
+            p '</html>'
+        else 
+            raise "Unknown format: #{format}"
+        end
+    end
+end
+```
+
+
 ## Patterns in Ruby? 
 
 Руби имеет: 
