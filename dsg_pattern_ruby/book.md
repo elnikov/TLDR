@@ -95,7 +95,39 @@ end
 Report.new.output_report
 ```
 
+```ruby
+class HTMLReport < Report 
+    private 
 
+    def output_start 
+        p '<html>'
+    end
+
+    def output_head 
+        p 'head'
+    end
+
+    def output_body_start 
+        p 'body start'
+    end
+
+    def output_line(line)
+        p line
+    end
+
+    def output_body_end 
+        p 'body end'
+    end
+
+    def output_end 
+        p '</html>'
+    end
+end
+HTMLReport.new.output_report
+``` 
+
+
+# Chapter 1
 
 ## Patterns in Ruby? 
 
