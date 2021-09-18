@@ -1,3 +1,8 @@
+## You aint' gonna need it
+
+Писать нужно точно нужно прямо сейчас.  Не нужно предсказывать будущее и пытаться написать функционал на перед.  
+Не заниматься оверинженирнгом в ущерб ясности кода.   
+
 ## Pattern for patterns
 
 1. Seperate out the things that changes from those that stay the same 
