@@ -8,7 +8,9 @@
 Prefer delegation.  
 Мы вывели функиола форматирования шаблонов из Report в отдельный класс. 
 Сам Formatter по сути является Template Pattern.   
-Его вставка в Report.new() Strategy Pattern
+Его вставка в Report.new() Strategy Pattern  
+
+
 ```ruby
 class Formatter
     def output(title, text)
@@ -50,6 +52,61 @@ end
 
 Report.new(HTMLFormatter.new).output
 Report.new(PlainTextFormatter.new).output
+
+#Можно менять форматироватирнованеи налету
+report = Report.new(HTMLFormatter.new)
+report.output
+
+report.formatter = PlainTextFormatter.new 
+report.output
+```
+
+### Sharing Data between the Context and the Strategy
+
+```ruby
+class Formatter
+    def output(context) # Принять внешний класс как контекст
+        raise NotImpementedError, "Abstract method #{__method__} called"
+    end
+end
+
+class HTMLFormatter < Formatter 
+    def output(context)
+        p 'html'
+        p context.title 
+        p context.text
+        p 'html'
+    end
+end
+
+class PlainTextFormatter < Formatter 
+    def output(context)  
+        p context.title
+        p context.text 
+    end
+end
+# Мы вывели детали вывода из класса Report 
+
+class Report 
+    attr_reader :title, :text 
+    attr_accessor :formatter 
+
+    def initialize(formatter)
+        @title = 'Monthly Report'
+        @text = ['Things are going', 'very well toady']
+        @formatter = formatter 
+    end
+
+    def output
+        @formatter.output(self) #Послать самого себя как конткет внутрь класса
+    end
+end
+
+report = Report.new(HTMLFormatter.new)
+report.output
+
+report.formatter = PlainTextFormatter.new 
+report.output
 ```
 
 # Chapter 3. Varying the Algorithm with the Template Method 
