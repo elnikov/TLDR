@@ -1,3 +1,11 @@
+## Patterns in Ruby? 
+
+Руби имеет: 
+1. DSL
+2. Metaprogramming
+3. Convetion Not configuration
+
+
 ## Fourteen Out of Twenty Three
 
 В книги будет 14 самых важных паттернов из 23 от Gof 
