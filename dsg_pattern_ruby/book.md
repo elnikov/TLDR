@@ -93,6 +93,243 @@ fred.salary = 350000
 
 ## Factoring Out the Observable Support 
 
+Using module insted inheritance
+```ruby
+module Subject 
+    def initialize
+        @observers = [] 
+    end
+
+    def add_observer(observer)
+        @observers << observer 
+    end
+    
+    def delete_observer(observer)
+        @observers.delete(observer)
+    end
+
+    # Уведомить всех заинтересованных в этом объект наблюдателей
+    def notify_observers
+        @observers.each do |observer|
+            observer.update(self)
+        end
+    end
+
+end
+
+
+class Employee 
+    include Subject
+
+    attr_reader :name 
+    attr_accessor :title, :salary 
+
+    def initialize(name, tilte, salary) 
+        @name = name 
+        @title = title 
+        @salary = salary
+        @observers = []
+    end
+
+    def salary=(new_salary)
+        @salary = new_salary
+        notify_observers 
+    end
+end
+
+class TaxMan 
+    def update( changed_employee )
+        p "Send #{changed_employee.name} next tax bill"
+    end
+end
+
+class AccountDepartment 
+    def update( changed_employee )
+        p "Congratulation #{changed_employee.name}"
+    end
+end
+
+taxman = TaxMan.new 
+account_dep = AccountDepartment.new 
+fred = Employee.new('Fred', 'Crane Operator', 30000)
+fred.add_observer(taxman)
+fred.add_observer(account_dep)
+fred.salary = 350000
+```
+
+## Observer ins Standart Ruby Library 
+
+```ruby
+
+require 'observer'
+
+
+class Employee 
+    include Observable
+
+    attr_reader :name 
+    attr_accessor :title, :salary 
+
+    def initialize(name, tilte, salary) 
+        @name = name 
+        @title = title 
+        @salary = salary
+        @observers = []
+    end
+
+    def salary=(new_salary)
+        @salary = new_salary
+        changed
+        notify_observers
+    end
+end
+
+class TaxMan 
+    def update( changed_employee )
+        p "Send #{changed_employee.name} next tax bill"
+    end
+end
+
+class AccountDepartment 
+    def update( changed_employee )
+        p "Congratulation #{changed_employee.name}"
+    end
+end
+
+taxman = TaxMan.new 
+account_dep = AccountDepartment.new 
+fred = Employee.new('Fred', 'Crane Operator', 30000)
+fred.add_observer(taxman)
+fred.add_observer(account_dep)
+fred.salary = 350000
+```
+
+## Observer in Wild
+
+Absorever in ruby its ActiveRecord.
+
+```ruby
+class EmployeeObserver < ActiveRecord::Observer 
+    def after_create(emloyee)
+    end
+
+    def after_update(emloyee)
+    end
+
+    def after_destroy(emloyee)
+    end
+end
+```
+
+## Observer in Golang 
+
+```golang
+package main
+
+import "fmt"
+
+//Издатель
+type subject interface {
+	register(Observer observer)
+	deregister(Observer observer)
+	notifyAll()
+}
+
+//Конкретный издатель
+
+type item struct {
+	observerList []observer
+	name         string
+	inStock      bool
+}
+
+func newItem(name string) *item {
+	return &item{
+		name: name,
+	}
+}
+
+func (i *item) changeName(newName string) {
+	notify := false
+	if (newName != i.name) {
+		notify = true
+	}
+	i.name = newName
+	if notify {
+		i.updateAvailability()
+	}
+}
+
+func (i *item) updateAvailability() {
+	fmt.Printf("Item %s is now in stock\n", i.name)
+	i.inStock = true
+	i.notifyAll()
+}
+func (i *item) register(o observer) {
+	i.observerList = append(i.observerList, o)
+}
+
+func (i *item) deregister(o observer) {
+	i.observerList = removeFromslice(i.observerList, o)
+}
+
+func (i *item) notifyAll() {
+	for _, observer := range i.observerList {
+		observer.update(i.name)
+	}
+}
+
+func removeFromslice(observerList []observer, observerToRemove observer) []observer {
+	observerListLength := len(observerList)
+	for i, observer := range observerList {
+		if observerToRemove.getID() == observer.getID() {
+			observerList[observerListLength-1], observerList[i] = observerList[i], observerList[observerListLength-1]
+			return observerList[:observerListLength-1]
+		}
+	}
+	return observerList
+}
+
+//Наблюдатель
+
+type observer interface {
+	update(string)
+	getID() string
+}
+
+//Конкретный наблюдатель
+
+type customer struct {
+	id string
+}
+
+func (c *customer) update(itemName string) {
+	fmt.Printf("Sending email to customer %s for item %s\n", c.id, itemName)
+}
+
+func (c *customer) getID() string {
+	return c.id
+}
+
+//Клиентский код
+
+func main() {
+	observerFirst := &customer{id: "abc@gmail.com"}
+	observerSecond := &customer{id: "xyz@gmail.com"}
+
+	shirtItem := newItem("Nike Shirt")
+	shirtItem.register(observerFirst)
+	shirtItem.register(observerSecond)
+	shirtItem.updateAvailability()
+
+	jacket := newItem("Adidas Jacket")
+	jacket.register(observerFirst)
+	jacket.register(observerSecond)
+	jacket.updateAvailability()
+	jacket.changeName("changed name")
+}
+```
+
 
 
 # Chapter 4. Replacing the Algorithm with the Strategy 
