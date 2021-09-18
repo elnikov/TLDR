@@ -61,7 +61,7 @@ report.formatter = PlainTextFormatter.new
 report.output
 ```
 
-### Sharing Data between the Context and the Strategy
+## Sharing Data between the Context and the Strategy
 
 ```ruby
 class Formatter
@@ -80,6 +80,50 @@ class HTMLFormatter < Formatter
 end
 
 class PlainTextFormatter < Formatter 
+    def output(context)  
+        p context.title
+        p context.text 
+    end
+end
+# Мы вывели детали вывода из класса Report 
+
+class Report 
+    attr_reader :title, :text 
+    attr_accessor :formatter 
+
+    def initialize(formatter)
+        @title = 'Monthly Report'
+        @text = ['Things are going', 'very well toady']
+        @formatter = formatter 
+    end
+
+    def output
+        @formatter.output(self) #Послать самого себя как конткет внутрь класса
+    end
+end
+
+report = Report.new(HTMLFormatter.new)
+report.output
+
+report.formatter = PlainTextFormatter.new 
+report.output
+```
+
+## Duck Typing yet Again 
+
+Мы можем удаить class Formatter 
+
+```ruby
+class HTMLFormatter 
+    def output(context)
+        p 'html'
+        p context.title 
+        p context.text
+        p 'html'
+    end
+end
+
+class PlainTextFormatter
     def output(context)  
         p context.title
         p context.text 
