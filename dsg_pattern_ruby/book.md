@@ -1,5 +1,10 @@
 # Chapter 3. Varying the Algorithm with the Template Method 
 
+Главная идея: 
+1. Создать абстратный базовы класс, с скелтом из абстратных методов
+2. В подклассах, переписывать абстратные методы, в зависимости от функционала
+
+
 ```ruby
 # Примитивный, не гибкий класс, для генерации html
 class Report 
@@ -125,6 +130,45 @@ class HTMLReport < Report
 end
 HTMLReport.new.output_report
 ``` 
+
+```ruby 
+# Версия для обычного текста
+class PlainTextReport < Report 
+    private 
+
+    def output_start 
+    end
+
+    def output_head 
+    end
+
+    def output_body_start 
+    end
+
+    def output_line(line)
+        p line
+    end
+
+    def output_body_end 
+    end
+
+    def output_end 
+    end
+end
+PlainTextReport.new.output_report
+```
+
+### Webrick is Template Pattern 
+
+```ruby
+require 'webrick'
+
+class HelloServer < WEBrick::GenericServer 
+    def run(socket)
+        socket.print('hello tcp\ip world')
+    end 
+end
+```
 
 
 # Chapter 1
