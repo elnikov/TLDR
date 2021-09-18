@@ -153,6 +153,91 @@ report.formatter = PlainTextFormatter.new
 report.output
 ```
 
+## Procs and Blocks 
+
+Самое большое приемущество Proc объектов, то что он берет все окружение(scope) на время создания.   
+```ruby
+hello = lambda do 
+    p 'hello'
+    p 'im and inside proc obj'
+end
+hello.call
+```
+
+```ruby
+name = 'John'
+proc = Proc.new { name = 'Mary'}  
+name = 'Travis'
+proc.call 
+p name 
+``` 
+
+```ruby
+def run_it
+    p 'befroe'
+    yield(10) #paste 
+    p 'after'
+end
+
+run_it do |x|
+    p x
+    p 'hello'
+    p 'coming to you from inside the block'
+end
+```
+
+```ruby
+def run_it(&block) #& - значит что объект уже создан до этого
+    p 'befroe'
+    block.call(10)
+    p 'after'
+end
+
+run_it do |x|
+    p x
+    p 'hello'
+    p 'coming to you from inside the block'
+end
+```
+
+## Quitk and dirty Strategies 
+
+```ruby
+HTML_FORMATTER = lambda do |context| 
+    p 'html'
+    p context.title 
+    p context.text
+    p 'html'
+end
+
+PLAIN_TEXT_FORMATTER = lambda do |context| 
+    p context.title 
+    p context.text
+end
+
+class Report 
+    attr_reader :title, :text 
+    attr_accessor :formatter 
+
+    def initialize(&formatter)
+        @title = 'Monthly Report'
+        @text = ['Things are going', 'very well toady']
+        @formatter = formatter 
+    end
+
+    def output
+        @formatter.call(self) #Послать самого себя как конткет внутрь класса
+    end
+end
+
+report = Report.new(HTML_FORMATTER)
+report.output
+
+report.formatter = PLAIN_TEXT_FORMATTER
+report.output
+```
+
+
 # Chapter 3. Varying the Algorithm with the Template Method 
 
 Главная идея: 
