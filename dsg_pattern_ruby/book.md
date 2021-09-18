@@ -43,6 +43,59 @@ class Report
 end
 ```
 
+### Отделить код, который не будет изменятся 
+
+В руби нет настоящийх абстрактных методов и классов.  
+Вместо этого мы raise NotImplementedError в абстрактных методах, чтобы невозможно было использовать абстратный класс.
+
+```ruby
+class Report 
+    def initialize 
+        @title = 'Monthly Report'
+        @text = ['Things are going', 'really, really well.' ]
+    end
+
+    def output_report 
+        output_start 
+        output_head 
+        output_body_start 
+        output_body
+        output_body_end 
+        output_end 
+    end
+
+    private 
+    def output_body 
+        @text.each do |line| 
+            output_line(line)
+        end
+    end
+
+    def output_start 
+        raise NotImplementedError, "Called abstract method: #{__method__}"
+    end
+
+    def output_head
+        raise NotImplementedError, "Called abstract method: #{__method__}"
+    end
+
+    def output_body_start
+        raise NotImplementedError, "Called abstract method: #{__method__}"
+    end
+
+    def output_body_end
+        raise NotImplementedError, "Called abstract method: #{__method__}"
+    end
+
+    def output_end
+        raise NotImplementedError, "Called abstract method: #{__method__}"
+    end
+
+end
+Report.new.output_report
+```
+
+
 
 ## Patterns in Ruby? 
 
