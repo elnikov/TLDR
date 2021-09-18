@@ -1,3 +1,57 @@
+# Chapter 4. Replacing the Algorithm with the Strategy 
+
+Главный недостатоко шаблонов - он основан на наследовании.  А наследование это игрушка дьявола. 
+Если мы хотим создать новый формат, нужно создать целый новый класс. Какая альтернатива?    
+
+## Delegate deleagate and dlegate again
+
+Prefer delegation.  
+Мы вывели функиола форматирования шаблонов из Report в отдельный класс. 
+Сам Formatter по сути является Template Pattern.   
+Его вставка в Report.new() Strategy Pattern
+```ruby
+class Formatter
+    def output(title, text)
+        raise NotImpementedError, "Abstract method #{__method__} called"
+    end
+end
+
+class HTMLFormatter < Formatter 
+    def output(title, text)
+        p 'html'
+        p title 
+        p text
+        p 'html'
+    end
+end
+
+class PlainTextFormatter < Formatter 
+    def output(title, text) 
+        p title
+        p text 
+    end
+end
+# Мы вывели детали вывода из класса Report 
+
+class Report 
+    attr_reader :title, :text 
+    attr_accessor :formatter 
+
+    def initialize(formatter)
+        @title = 'Monthly Report'
+        @text = ['Things are going', 'very well toady']
+        @formatter = formatter 
+    end
+
+    def output
+        @formatter.output(@title, @text)
+    end
+end
+
+Report.new(HTMLFormatter.new).output
+Report.new(PlainTextFormatter.new).output
+```
+
 # Chapter 3. Varying the Algorithm with the Template Method 
 
 Главная идея: 
