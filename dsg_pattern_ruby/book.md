@@ -1,3 +1,100 @@
+# Chapter 5. Keeping Up with the times with the Observer
+
+Необходимо строить систему, где каждая часть система могла быть в курсе что происходит в других.  
+
+Наблюдатель — это поведенческий паттерн проектирования, который создаёт механизм подписки, позволяющий одним объектам следить и реагировать на события, происходящие в других объектах.
+
+```ruby
+class Employee
+    attr_reader :name 
+    attr_accessor :title, :salary 
+
+    def initialize(name, tilte, salary, payroll) 
+        @name = name 
+        @title = title 
+        @salary = salary
+        @payroll = payroll
+    end
+
+    def salary=(new_salary)
+        @salary = new_salary
+        @payroll.update(self)
+    end
+end
+
+
+# We need keep Payroll Dep infomed of pay changes 
+class Payroll 
+    def update( change_employee) 
+        p "New check for #{change_employee.name}"
+        p "Salary #{change_employee.salary}"
+    end
+end
+
+payroll = Payroll.new
+fred = Employee.new('Fred', 'Crane Operator', 30000, payroll)
+fred.salary = 350000
+```
+
+## Better way to Stay Informed 
+
+```ruby
+class Employee
+    attr_reader :name 
+    attr_accessor :title, :salary 
+
+    def initialize(name, tilte, salary) 
+        @name = name 
+        @title = title 
+        @salary = salary
+        @observers = []
+    end
+
+    def salary=(new_salary)
+        @salary = new_salary
+        notify_observers 
+    end
+
+    # Уведомить всех заинтересованных в этом объект наблюдателей
+    def notify_observers
+        @observers.each do |observer|
+            observer.update(self)
+        end
+    end
+
+    def add_observer(observer)
+        @observers << observer 
+    end
+    
+    def delete_observer(observer)
+        @observers.delete(observer)
+    end
+end
+
+class TaxMan 
+    def update( changed_employee )
+        p "Send #{changed_employee.name} next tax bill"
+    end
+end
+
+class AccountDepartment 
+    def update( changed_employee )
+        p "Congratulation #{changed_employee.name}"
+    end
+end
+
+taxman = TaxMan.new 
+account_dep = AccountDepartment.new 
+fred = Employee.new('Fred', 'Crane Operator', 30000)
+fred.add_observer(taxman)
+fred.add_observer(account_dep)
+fred.salary = 350000
+```
+
+## Factoring Out the Observable Support 
+
+
+
 # Chapter 4. Replacing the Algorithm with the Strategy 
 
 Стратегия — это поведенческий паттерн, выносит набор алгоритмов в собственные классы и делает их взаимозаменимыми.
