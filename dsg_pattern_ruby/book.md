@@ -1,3 +1,121 @@
+# Chapter 7. Iterator 
+
+Итератор — это поведенческий паттерн проектирования, который даёт возможность последовательно обходить элементы составных объектов, не раскрывая их внутреннего представления.
+
+```ruby
+class ArrayIterator 
+  def initialize(array)
+    @array = array 
+    @index = 0
+  end
+
+  def has_next? 
+    @index < @array.length
+  end
+
+  def item
+    @array[@index]
+  end
+
+  def next_item 
+    value = @array[@index]
+    @index += 1
+    value 
+  end
+end
+
+array = ['red', 'green', 'blue']
+
+iterator = ArrayIterator.new(array)
+while iterator.has_next?
+  p "item #{iterator.next_item}"
+end
+```
+
+## Iterators Golang
+
+```golang
+package main
+
+import "fmt"
+
+type collection interface {
+	createIterator() iterator
+}
+
+//Кокнетная коллекция
+
+
+type userCollection struct {
+	users []*user
+}
+
+func (u *userCollection) createIterator() iterator {
+	return &userIterator{
+		users: u.users,
+	}
+}
+
+// Итератор
+
+type iterator interface {
+	hasNext() bool
+	getNext() *user
+}
+
+// Конкретный итератор
+
+type userIterator struct {
+	index int
+	users []*user
+}
+
+func (u *userIterator) hasNext() bool {
+	if u.index < len(u.users) {
+		return true
+	}
+	return false
+
+}
+func (u *userIterator) getNext() *user {
+	if u.hasNext() {
+		user := u.users[u.index]
+		u.index++
+		return user
+	}
+	return nil
+}
+
+// Клиентский код
+type user struct {
+	name string
+	age  int
+}
+
+func main() {
+
+	user1 := &user{
+		name: "a",
+		age:  30,
+	}
+	user2 := &user{
+		name: "b",
+		age:  20,
+	}
+
+	userCollection := &userCollection{
+		users: []*user{user1, user2},
+	}
+
+	iterator := userCollection.createIterator()
+
+	for iterator.hasNext() {
+		user := iterator.getNext()
+		fmt.Printf("User is %+v\n", user)
+	}
+}
+```
+
 # Chapter 6. Composite Task 
 
 Компоновщик — это структурный паттерн проектирования, который позволяет сгруппировать множество объектов в древовидную структуру, а затем работать с ней так, как будто это единичный объект.
