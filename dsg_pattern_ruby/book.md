@@ -1,3 +1,214 @@
+# Chapter 9. Adapter 
+
+Адаптер — это структурный паттерн, который позволяет подружить несовместимые объекты.
+
+```ruby
+class Encrypter 
+    def initialize(key)
+        @key = key 
+    end
+
+    def encrypy(reader, writer)
+        key_index = 0
+        while not reader.eof? 
+            clear_char = reader.getc
+            encrypted_char = clear_char ^ @key[key_index]
+            writer.putc(encrypted_char)
+            key_index = (key_index + 1) % @key.size
+        end
+    end
+end
+
+
+reader = File.open('message.txt')
+writer = File.open('message.encrypted','w')
+encrypter = Encrypter.new('my secret key')
+encrypter.encrypt(reader, writer)
+```
+
+```ruby
+
+class StringIOAdapter 
+    def initialize(string)
+        @string = string 
+        @position = 0
+    end
+    def getc 
+        if @position >= @string.length 
+            raise EOFError
+        end
+        ch = @string[@position]
+        @position += 1
+        return ch
+    end
+    def eof? 
+        return @position >= @string.length
+    end
+end
+
+encrypter = Encrypter.new('XYZZY')
+reader = StringIOAdapter.new('we attach at dawn')
+writer = File.open('out.txt', 'w')
+encrypter.encrpyt(reader, writer)
+```
+
+## The Near Misses
+
+```ruby
+class Renderer
+    def render(text_object)
+        text = text_object.text 
+        size = text_object.size_inches
+        color = text_object.color 
+    end
+end
+
+class TextObject 
+    attr_reader :text, :size_inches, :color
+    def initialize(text, size_inches, color )
+        @text = text 
+        @size_inches = size_inches
+        @color = color
+    end
+end
+
+class BritishTextObject
+    attr_reader :string, :size_mm, :colour
+end
+
+class BritishTextObjectAdapter < TextObject  
+    def initialize(bto)
+        @bto = bto 
+    end
+
+    def text
+        return @bto.string
+    end
+
+    def size_inches 
+        return @bto.size_mm / 25.4
+    end
+
+    def color 
+        return @bto.colour
+    end
+end
+```
+
+
+## An adaptive alternative?
+
+```ruby
+require 'british_text_object'
+
+class BritishTextObject 
+    def color 
+        return colour
+    end
+
+    def text 
+        return string
+    end
+
+    def size_inches 
+        return size_mm / 25.4
+    end
+end
+```
+
+## Modifying a Single Instance
+
+```ruby 
+bto = BritishTextObject.new('hello', 50.4, :blue)
+
+class << bto 
+    def color
+        colour
+    end
+
+    def text 
+        string
+    end
+
+    def size_inches
+        return size_mm / 25.4
+    end
+end
+```
+
+## GOlang Adapter
+
+
+```golang
+package main
+
+import "fmt"
+
+
+//Клиентский код
+type client struct {
+}
+
+func (c *client) insertLightningConnectorIntoComputer(com computer) {
+	fmt.Println("Client inserts Lightning connector into computer.")
+	com.insertIntoLightningPort()
+}
+
+//Интерфейс клиента
+
+
+type computer interface {
+	insertIntoLightningPort()
+}
+
+//Сервис
+
+type mac struct {
+}
+
+func (m *mac) insertIntoLightningPort() {
+	fmt.Println("Lightning connector is plugged into mac machine.")
+}
+
+//Неизвестный сервис
+
+type windows struct{}
+
+func (w *windows) insertIntoUSBPort() {
+	fmt.Println("USB connector is plugged into windows machine.")
+}
+
+//Адаптер
+
+type windowsAdapter struct {
+	windowMachine *windows
+}
+
+func (w *windowsAdapter) insertIntoLightningPort() {
+	fmt.Println("Adapter converts Lightning signal to USB.")
+	w.windowMachine.insertIntoUSBPort()
+}
+
+
+func main() {
+
+	client := &client{}
+	mac := &mac{}
+
+	client.insertLightningConnectorIntoComputer(mac)
+
+	windowsMachine := &windows{}
+	windowsMachineAdapter := &windowsAdapter{
+		windowMachine: windowsMachine,
+	}
+
+	client.insertLightningConnectorIntoComputer(windowsMachineAdapter)
+}
+
+```
+
+
+
 # Chapter 8. Command pattern 
 
 Команда — это поведенческий паттерн, позволяющий заворачивать запросы или простые операции в отдельные объекты.
