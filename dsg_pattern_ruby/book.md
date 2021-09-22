@@ -1,3 +1,370 @@
+# Chapter 8. Command pattern 
+
+Команда — это поведенческий паттерн, позволяющий заворачивать запросы или простые операции в отдельные объекты.
+
+
+```ruby
+#wrong way
+class SlikButton 
+    def on_button_push 
+    #
+    # Do smth 
+    #
+    end
+end
+
+class SaveButton < SlickButton 
+    def on_button_push 
+    end
+end
+
+class NewDocumentButton < SlickButton
+    def on_button_push
+    end
+end
+```
+
+## Easier Way
+
+```ruby
+class SlikButton 
+    attr_accessor :command 
+    def initialize(command)
+        @command = command 
+    end
+
+    def on_button_push 
+        @command.execute if @command
+    end
+end
+
+class SaveCommand 
+    def execute 
+        p 'save is processing'
+    end
+end
+
+btn = SlikButton.new(SaveCommand.new)
+btn.on_button_push
+```
+
+## Code blocks as Commands
+
+```ruby
+class SlikButton 
+    attr_accessor :command 
+    def initialize(&command)
+        @command = command 
+    end
+
+    def on_button_push 
+        @command.call if @command
+    end
+end
+
+new_button = SlikButton.new do 
+    p 'code block execute'
+end
+```
+
+## Comands That Record 
+
+```ruby
+class Command 
+    attr_reader :description 
+    def initialize(description)
+        @description = description
+    end
+    def execute
+        p 'execute'
+    end
+end
+
+class CreateFile < Command 
+    def initialize(path, contents)
+        super('create file: #{path}')
+        @path = path 
+        @contents = contents
+    end
+    def execute 
+        f = File.open(@path, "w")
+        f.write(@contents)
+        f.close
+    end
+end
+
+
+class DeleteFile < Command
+    def initialize(path)
+        super("delete #{path}")
+        @path = path 
+    end
+    def execute
+        File.delete(@path)
+    end
+end
+```
+
+## Composite Command
+
+```ruby
+
+class CompositeCommand < Command 
+    def initialize 
+    end
+
+    def add_command(cmd)
+        @commands << cmd 
+    end
+
+    def execute
+        @commands.each {|cmd| cmd.execute}
+    end
+
+    def description 
+    end
+end
+
+cmds = CompositeCommand.new 
+cmd.add_command(CreateFile.new)
+cmd.add_command(CopyFile.new)
+cmd.add_command(DeleteFile.new)
+```
+
+## Being Undone by a Command
+
+```ruby
+class CreateFile < Command 
+    def initialize(path, content)
+        super "Create file #{path}"
+        @path = path 
+        @contents = contents
+    end
+
+    def execute
+        f = File.open(@path, "w")
+        f.write(@contents)
+        f.close
+    end
+
+    def unexecute
+        File.delete(@path)
+    end
+end
+
+class DeleteFile < Command 
+    def initialize(path)
+        super "Delete #{path}"
+        @path = path 
+    end
+
+    def execute 
+        if File.exists?(@path)
+            @contents = File.read(@path)
+        end
+        f = File.delete(@path)
+    end
+
+    def unexecute 
+        if @contents
+            f = File.open(@path, "w")
+            f.write(@contents)
+            f.close
+        end
+    end
+end
+```
+
+## Madeleine 
+
+```ruby
+require 'rubygems'
+require 'madeleine'
+
+class Employee 
+    attr_accessor :name, :number, :address 
+    def initialize(name, number, address)
+        @name = name 
+        @number = number
+        @address = address 
+    end
+
+    def to_s 
+        "Employee: #{name} #{number} #{address}"
+    end
+end
+
+class EmployeeManager
+    def initialize
+        @employees = {}
+    end
+
+    def add_employee(e)
+        @employees[e.number] = e 
+    end
+
+    def change_address(number, address)
+        employee = @employees[number]
+        raise 'no such employee' if not employee
+        employee.address = address 
+    end
+
+    def delete_employee(number)
+        @employee.remove(number)
+    end
+
+    def find_employee(number)
+        @employee[number]
+    end
+end
+
+class AddEmployee 
+    def initialize(employee)
+        @employee = employee
+    end
+    
+    def execute(system)
+        system.add_employee(@employee)
+    end
+end
+
+class DeleteEmployee
+    def initialize(number)
+        @number=number
+    end
+
+    def execute(system)
+        system.delete_employee(@number)
+    end
+end
+
+class ChangeAddress 
+    def initialize(number, address)
+        @number = number 
+        @address = address
+    end
+
+    def execute(system)
+        system.change_address(@number, @addess)
+    end
+end
+
+class FindEmployee 
+    def initialize(number)
+        @number = number 
+    end
+
+    def execute(system)
+        system.find_employee(@number)
+    end
+end
+
+
+store = SnapshotMadeleine.new('employees') {EmployeeManager.new}
+
+Thread.new do 
+    while true 
+        sleep(20)
+        madeleine.take_snapshot
+    end
+end
+
+tom = Employee.new('tom','1001','1 davison')
+jerry = Employee.new('jerry','1002','1 123')
+store.execute_command(AddEmployee.new(tom))
+store.execute_command(AddEmployee.new(jerry))
+```
+
+
+## Golang Command 
+
+```golang
+package main
+
+import "fmt"
+
+//отправитель
+type button struct {
+	command command
+}
+
+func (b *button) press() {
+	b.command.execute()
+}
+
+//Интерфейс команды
+type command interface {
+	execute()
+}
+
+
+//Кокнретная команда
+
+type onCommand struct {
+	device device
+}
+
+func (c *onCommand) execute() {
+	c.device.on()
+}
+
+
+type offCommand struct {
+	device device
+}
+
+func (c *offCommand) execute() {
+	c.device.off()
+}
+
+//Интерфейс получателя
+
+type device interface {
+	on()
+	off()
+}
+
+// Конкретный получатель
+
+type tv struct {
+	isRunning bool
+}
+
+func (t *tv) on() {
+	t.isRunning = true
+	fmt.Println("Turning tv on")
+}
+
+func (t *tv) off() {
+	t.isRunning = false
+	fmt.Println("Turning tv off")
+}
+
+// Клиентский код
+
+func main() {
+	tv := &tv{}
+
+	onCommand := &onCommand{
+		device: tv,
+	}
+
+	offCommand := &offCommand{
+		device: tv,
+	}
+
+	onButton := &button{
+		command: onCommand,
+	}
+	onButton.press()
+
+	offButton := &button{
+		command: offCommand,
+	}
+	offButton.press()
+}
+```
+
 # Chapter 7. Iterator 
 
 Итератор — это поведенческий паттерн проектирования, который даёт возможность последовательно обходить элементы составных объектов, не раскрывая их внутреннего представления.
