@@ -1,3 +1,282 @@
+
+# Chapter 10. Proxy 
+
+```ruby
+# The Real object
+class BankAccount 
+  attr_reader :balance 
+
+  def initialize(starting_balance=0)
+    @balance = starting_balance
+  end
+
+  def deposit(amount)
+    @balance += amount 
+  end
+
+  def withdraw(amount)
+    @balance -= amount 
+  end
+end
+
+#Present exactly the same intreface
+class BankAccountProxy
+  def initialize(real_object)
+    @real_object = real_object
+  end
+
+  def balance
+    @real_object.balance
+  end
+
+  def deposit(amount)
+    @real_object.deposit(amount)
+  end
+
+  def withdraw(amount)
+    @real_object.withdraw(amount)
+  end
+end
+
+
+account = BankAccount.new(100)
+account.deposit(50)
+account.withdraw(10)
+
+proxy = BankAccountProxy.new(account)
+proxy.deposit(50)
+proxy.withdraw(10)
+```
+
+## The protection proxy
+
+```ruby
+
+require 'etc'
+
+class AccountProtectionProxy 
+  def initialize(real_account, owner_name)
+    @subject = real_account
+    @owner_name = owner_name
+  end
+
+  def deposit
+    check_access 
+    return @subject.deposit(amount)
+  end
+
+  
+  def withdraw
+    check_access 
+    return @subject.withdraw(amount)
+  end
+
+  def balance
+    check_access 
+    return @subject.balance(amount)
+  end
+
+  private 
+
+  def check_access
+    if Etc.getlogin != @owner_name
+      raise "Illlegal access: #{Etc.getlogin}"
+    end
+  end
+
+end
+```
+
+## Remote proxy
+
+## Virtual Proxy
+
+Delay creating expensive object, until we really need them.  
+
+```ruby
+class VirtalAccountProxy 
+  def initialize(starting_balance=0)
+    @balance = starting_balance
+  end
+
+  def deposit
+    s = subject 
+    return s.deposit(amount)
+  end
+
+  def withdraw
+    s = subject 
+    return s.withdraw(amount)
+  end
+
+  def balance
+    s = subject 
+    return s.balance
+  end
+
+  private 
+
+  def subject 
+    @subject || (@subject = BankAccount.new(@starting_balance))
+  end
+end
+
+v = VirtalAccountProxy.new(100)
+```
+
+## Eliminating That Proxy Drudgery
+
+```ruby
+class TestMethodMissing
+  def hello
+    p ' hello from real method'
+  end
+
+  def method_missing(name, *args)
+    p "unknown method #{name}"
+    p "args: #{args.join(' ')}"
+  end
+
+end
+
+tmm = TestMethodMissing.new
+tmm.hello 
+tmm.goodbuy('curel', 'world', test: false)
+tmm.send(:hello)
+tmm.send(:goodbye, 'cruel', 'world')
+
+```
+
+## Prixes without the Tears
+
+```ruby
+# The Real object
+class BankAccount 
+  attr_reader :balance 
+
+  def initialize(starting_balance=0)
+    @balance = starting_balance
+  end
+
+  def deposit(amount)
+    @balance += amount 
+  end
+
+  def withdraw(amount)
+    @balance -= amount 
+  end
+end
+
+
+class AccountProxy 
+  def initialize(real_account)
+    @subject=real_account
+  end
+
+  def method_missing(name, *args)
+    p name 
+    @subject.send(name, *args)
+  end
+end
+
+ap = AccountProxy.new( BankAccount.new(100))
+ap.deposit(25)
+ap.withdraw(50)
+ap.balance
+```
+
+## Golang Proxy
+
+```golang
+
+package main
+
+import "fmt"
+
+//Subject
+
+
+type server interface {
+	handleRequest(string, string) (int, string)
+}
+
+//proxy
+type nginx struct {
+	application       *application
+	maxAllowedRequest int
+	rateLimiter       map[string]int
+}
+
+func newNginxServer() *nginx {
+	return &nginx{
+		application:       &application{},
+		maxAllowedRequest: 2,
+		rateLimiter:       make(map[string]int),
+	}
+}
+
+func (n *nginx) handleRequest(url, method string) (int, string) {
+	allowed := n.checkRateLimiting(url)
+	if !allowed {
+		return 403, "Not Allowed"
+	}
+	return n.application.handleRequest(url, method)
+}
+
+func (n *nginx) checkRateLimiting(url string) bool {
+	if n.rateLimiter[url] == 0 {
+		n.rateLimiter[url] = 1
+	}
+	if n.rateLimiter[url] > n.maxAllowedRequest {
+		return false
+	}
+	n.rateLimiter[url] = n.rateLimiter[url] + 1
+	return true
+}
+
+//real subject
+
+type application struct {
+}
+
+func (a *application) handleRequest(url, method string) (int, string) {
+	if url == "/app/status" && method == "GET" {
+		return 200, "Ok"
+	}
+
+	if url == "/create/user" && method == "POST" {
+		return 201, "User Created"
+	}
+	return 404, "Not Ok"
+}
+
+//client code
+
+func main() {
+
+	nginxServer := newNginxServer()
+	appStatusURL := "/app/status"
+	createuserURL := "/create/user"
+
+	httpCode, body := nginxServer.handleRequest(appStatusURL, "GET")
+	fmt.Printf("\nUrl: %s\nHttpCode: %d\nBody: %s\n", appStatusURL, httpCode, body)
+
+	httpCode, body = nginxServer.handleRequest(appStatusURL, "GET")
+	fmt.Printf("\nUrl: %s\nHttpCode: %d\nBody: %s\n", appStatusURL, httpCode, body)
+
+	httpCode, body = nginxServer.handleRequest(appStatusURL, "GET")
+	fmt.Printf("\nUrl: %s\nHttpCode: %d\nBody: %s\n", appStatusURL, httpCode, body)
+
+	httpCode, body = nginxServer.handleRequest(createuserURL, "POST")
+	fmt.Printf("\nUrl: %s\nHttpCode: %d\nBody: %s\n", appStatusURL, httpCode, body)
+
+	httpCode, body = nginxServer.handleRequest(createuserURL, "GET")
+	fmt.Printf("\nUrl: %s\nHttpCode: %d\nBody: %s\n", appStatusURL, httpCode, body)
+}
+```
+
+
+
 # Chapter 9. Adapter 
 
 Адаптер — это структурный паттерн, который позволяет подружить несовместимые объекты.
