@@ -1,3 +1,244 @@
+# Chapter 11. Decorator
+
+## Decorators: The Cur for Ugly Code
+
+```ruby
+class EnhancedWriter
+  attr_reader :check_sum
+
+  def initialize(path)
+    @file = File.open(path, "w")
+    @check_sum = 0 
+    @line_number = 1
+  end
+
+  def write_line(line)
+    @file.print(line)
+    @file.print("\n")
+  end
+
+  def checksumming_write_line(data)
+    data.each_byte {|byte| @check_sum = (@check_sum + byte) % 256}
+    @check_sum += "\n"[0] % 256 
+    write_line(data)
+  end
+
+  def timestamping_write_line(data)
+    write_line("#{Time.new}: #{data}")
+  end
+
+  def numbering_write_line(data)
+    write_line("%{@line_number}: #{data}")
+    @line_number += 1
+  end
+
+  def close 
+    @file.cloas
+  end
+
+end
+```
+
+
+```ruby
+class SimpleWriter
+  def initialize(path)
+    @file  = File.open(path, 'w')
+  end
+  
+  def write_line(line) 
+    @file.print(line)
+    @file.print("\n")
+  end
+
+  def pos
+    @file.pos
+  end
+
+  def rewind 
+    @file.rewind 
+  end
+
+  def close
+    @file.close 
+  end
+end
+
+
+class WriterDecorator 
+  def initialize(real_writer)
+    @real_writer = real_writer
+  end
+
+  def write_line(line)
+    @real_writer.write_line(line)
+  end
+
+  def pos
+    @real_writer.pos 
+  end
+
+  def rewind 
+    @real_writer.rewind 
+  end
+
+  def close
+    @real_writer.close 
+  end
+
+end
+
+class NumberingWriter < WriterDecorator 
+  def initialize(real_writer)
+    super(real_writer)
+    @line_number =  1
+  end
+
+  def write_line(line)
+    @real_writer.write_line("#{@line_number}: #{line}")
+    @line_number += 1 
+  end
+end
+
+class CheckSummingWriter < WriterDecorator 
+  attr_reader :check_sum 
+
+  def initialize(real_writer)
+    @real_writer = real_writer 
+    @check_sum = 0
+  end
+
+  def write_line(line)
+    data.each_byte {|byte| @check_sum = (@check_sum + byte) % 256}
+    @check_sum += "\n"[0] % 256 
+    write_line(data)
+  end
+end
+
+class TimeStampingWriter < WriterDecorator 
+  def write_line(line)
+    @real_writer.write_line("#{Time.new}: #{line}")
+  end
+end
+
+writer = NumberingWriter.new(SimpleWriter.new('final.text'))
+writer.write_line('Hello out there')
+
+writer = CheckSummingWriter.new(SimpleWriter.new('final.text'))
+writer.write_line('Hello out there')
+
+writer = TimeStampingWriter.new(SimpleWriter.new('final.text'))
+writer.write_line('Hello out there')
+
+
+writer = CheckSummingWriter.new(TimeStampingWriter.new(NumberingWriter.new(SimpleWriter.new('final.txt')))).new 
+writer.write_line('Hello out there')
+```
+
+## Easing Delegation Blues 
+
+```ruby
+require 'forwardable'
+
+class WriterDecorator 
+  extend Forwardable 
+  def_delegators :@real_writer, :write_line, :rewind, :pos, :close
+  def initialize(real_writer)
+    @real_writer = real_writer
+  end
+end
+```
+
+## Moduling 
+
+```ruby
+module NumberingWrite
+  def initialize(real_writer)
+    super(real_writer)
+    @line_number =  1
+  end
+
+  def write_line(line)
+    @real_writer.write_line("#{@line_number}: #{line}")
+    @line_number += 1 
+  end
+end
+
+module TimeStampingWriter 
+  def write_line(line)
+    @real_writer.write_line("#{Time.new}: #{line}")
+  end
+end
+
+w = SimpleWriter.new('out')
+w.extend(NumberingWriter)
+w.extend(TimeStampingWriter)
+w.write_line('hello')
+```
+
+## Decorator on GO
+
+```golang
+package main
+
+import "fmt"
+
+//Интерфейс компонента
+type pizza interface {
+	getPrice() int
+}
+
+//Конкретный компоненет
+
+type veggeMania struct {
+}
+
+func (p *veggeMania) getPrice() int {
+	return 15
+}
+
+// Конкретный декоратор
+
+type tomatoTopping struct {
+	pizza pizza
+}
+
+func (c *tomatoTopping) getPrice() int {
+	pizzaPrice := c.pizza.getPrice()
+	return pizzaPrice + 7
+}
+
+// Конкретный декоратор
+
+type cheeseTopping struct {
+	pizza pizza
+}
+
+func (c *cheeseTopping) getPrice() int {
+	pizzaPrice := c.pizza.getPrice()
+	return pizzaPrice + 10
+}
+
+// Клинсткий код
+
+func main() {
+
+	pizza := &veggeMania{}
+
+	//Add cheese topping
+	pizzaWithCheese := &cheeseTopping{
+		pizza: pizza,
+	}
+
+	//Add tomato topping
+	pizzaWithCheeseAndTomato := &tomatoTopping{
+		pizza: pizzaWithCheese,
+	}
+
+	fmt.Printf("Price of veggeMania with tomato and cheese topping is %d\n", pizzaWithCheeseAndTomato.getPrice())
+}
+```
+
 
 # Chapter 10. Proxy 
 
