@@ -1,3 +1,255 @@
+# Chapter 12. Singleton
+
+
+## Class Variables
+
+```ruby
+class ClassVariableTester
+  @@class_count = 0 
+  def initialize 
+    @instance_count = 0
+  end
+
+  def increment
+    @@class_count = @@class_count + 1 
+    @instance_count = @instance_count + 1
+  end
+
+  def to_s 
+    "class_count #{@@class_count} instance_count: #{@instance_count}"
+  end
+end
+
+c1 = ClassVariableTester.new 
+c1.increment
+c1.increment
+c1.increment
+c1.increment
+p c1.to_s
+
+c2 = ClassVariableTester.new 
+c2.increment
+c2.increment
+p c2.to_s
+```
+
+## First Try
+
+```ruby
+class SimpleLogger
+  attr_accessor :level 
+  ERROR = 1 
+  WARINING = 2
+  INFO = 3
+
+  def initialize
+    @log = File.open("log.txt","w")
+    @level = WARINING
+  end
+
+  def error(msg)
+    @log.puts(msg)
+    @log.flush 
+  end
+
+  def warning(msg)
+    @log.puts(msg) if @level >= WARINING 
+    @log.flush 
+  end
+
+  def info(msg)
+    @log.puts(msg) if @level >= INFO 
+    @log.flush 
+  end
+end
+
+logger = SimpleLogger.new 
+logger.level = SimpleLogger::INFO 
+
+logger.info('Doing the frst')
+logger.info('Doing the 123')
+```
+
+
+```ruby
+class SimpleLogger
+
+  @@instance = SimpleLogger.new 
+
+  def self.instance 
+    return @@instance 
+  end
+
+end
+
+logger1 = SimpleLogger.instance
+logger2 = SimpleLogger.instance
+```
+
+## Making sure THere is Only One
+
+```ruby
+class SimpleLogger
+
+  @@instance = SimpleLogger.new 
+
+  def self.instance 
+    return @@instance 
+  end
+
+  private_class_method :new
+
+end
+
+logger = SimpleLogger.new
+```
+
+## The Singleton module
+
+```ruby
+require 'singleton'
+
+class SimpleLogger
+  include Singleton
+
+end
+
+logger = SimpleLogger.new
+logger1 = SimpleLogger.instance
+logger2 = SimpleLogger.instance
+```
+
+## Global Variables as Singleton
+
+```ruby
+$logger = SimpleLogger.new
+```
+
+## Classes As Singleton
+
+```ruby
+class ClassBasedLogger
+  ERROR = 1
+  WARINING = 2
+  INFO = 3
+  @@log = File.open('log.txt', 'w')
+  @@level = WARINING
+
+  def self.error(msg)
+    @@log.puts(msg)
+    @@log.flush 
+  end
+
+  def self.warining(msg)
+    @@log.puts(msg) if @@level >= WARINING
+    @@log.flush 
+  end
+
+
+  def self.info(msg)
+    @@log.puts(msg) if @@level >= INFO
+    @@log.flush 
+  end
+
+  def self.level=(new_level)
+    @@level = new_level 
+  end
+
+  def self.level 
+    @@level 
+  end
+end
+
+ClassBasedLogger.level = ClassBasedLogger::INFO 
+ClassBasedLogger.info('123')
+```
+
+## Moudles As Singleton 
+
+```ruby
+module ModuleBasedLogger
+  ERROR = 1
+  WARINING = 2
+  INFO = 3
+  @@log = File.open('log.txt', 'w')
+  @@level = WARINING
+
+  def self.error(msg)
+    @@log.puts(msg)
+    @@log.flush 
+  end
+
+  def self.warining(msg)
+    @@log.puts(msg) if @@level >= WARINING
+    @@log.flush 
+  end
+
+
+  def self.info(msg)
+    @@log.puts(msg) if @@level >= INFO
+    @@log.flush 
+  end
+
+  def self.level=(new_level)
+    @@level = new_level 
+  end
+
+  def self.level 
+    @@level 
+  end
+end
+
+ClassBasedLogger.level = ClassBasedLogger::INFO 
+ClassBasedLogger.info('123')
+```
+
+## Singleton Golang
+
+```golang
+package main
+
+import (
+	"fmt"
+	"sync"
+)
+
+var lock = &sync.Mutex{}
+
+type single struct {
+}
+
+var singleInstance *single
+
+func getInstance() *single {
+	if singleInstance == nil {
+		lock.Lock()
+		defer lock.Unlock()
+		if singleInstance == nil {
+			fmt.Println("Creating single instance now.")
+			singleInstance = &single{}
+		} else {
+			fmt.Println("Single instance already created.")
+		}
+	} else {
+		fmt.Println("Single instance already created.")
+	}
+
+	return singleInstance
+}
+
+
+func main() {
+
+	for i := 0; i < 30; i++ {
+		go getInstance()
+	}
+
+	// Scanln is similar to Scan, but stops scanning at a newline and
+	// after the final item there must be a newline or EOF.
+	fmt.Scanln()
+}
+```
+
 # Chapter 11. Decorator
 
 ## Decorators: The Cur for Ugly Code
