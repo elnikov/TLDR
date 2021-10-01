@@ -1,4 +1,4 @@
-# Chapter 13. Adapter 
+# Chapter 13. Factory 
 
 ## The Problem 
 
