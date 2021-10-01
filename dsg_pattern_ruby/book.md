@@ -1,3 +1,179 @@
+# Chapter 13. Adapter 
+
+## The Problem 
+
+```ruby
+class Duck 
+
+  def initialize(name)
+    @name = name 
+  end
+
+
+  def eat  
+    p "Duck #{@name} is eating"
+  end
+
+  def speak 
+    p "Duck #{@name} say quak"
+  end
+
+  def sleep 
+    p "Duck #{@name} sleeps quitly"
+  end
+
+end
+
+class Frog 
+
+  def initialize(name)
+    @name = name 
+  end
+
+
+  def eat  
+    p "Frog #{@name} is eating"
+  end
+
+  def speak 
+    p "Frog #{@name} say Croooak"
+  end
+
+  def sleep 
+    p "Frog #{@name} sleeps quitly"
+  end
+end
+
+
+class Pond
+  def initialize(number_ducks)
+    @ducks = []
+    number_ducks.times do |i|
+      duck = Duck.new("Duck#{i}")
+      @ducks << duck 
+    end
+  end
+
+  def simulate_one_day 
+    @ducks.each {|duck| duck.speak}
+    @ducks.each {|duck| duck.eat}
+    @ducks.each {|duck| duck.sleep}
+  end
+end
+
+pond = Pond.new(3)
+pond.simulate_one_day
+```
+
+
+## Template Method Strikes Again 
+
+```ruby
+class Pond
+  def initialize(number_animals)
+    @animals = []
+    number_animals.times do |i|
+      animal = new_animal("Duck#{i}")
+      @animals << animal 
+    end
+  end
+
+  def simulate_one_day 
+    @animals.each {|animal| animal.speak}
+    @animals.each {|animal| animal.eat}
+    @animals.each {|animal| animal.sleep}
+  end
+end
+
+class DuckPond < Pond 
+  def new_animal(name)
+    Duck.new(name)
+  end
+end
+
+class FrogPond < Pond 
+  def new_animal(name)
+    Frog.new(name)
+  end
+end
+
+pond = FrogPond.new(3)
+pond.simulate_one_day
+```
+
+```ruby
+class Pond
+  def initialize(number_animals, number_plants)
+    @animals = []
+    number_animals.times do |i|
+      animal = new_animal("Duck#{i}")
+      @animals << animal 
+    end
+
+    @plants = []
+    number_plants.times do |i| 
+      plant = new_plant("Plant#{i}")
+      @plants << plant
+  end
+
+  def simulate_one_day 
+    @plants.each {|plant| plant.grow}
+    @animals.each {|animal| animal.speak}
+    @animals.each {|animal| animal.eat}
+    @animals.each {|animal| animal.sleep}
+  end
+end
+
+
+class DuckWaterLilyPond < Pond 
+  def new_animal(name)
+    Duck.new 
+  end
+
+  def new_plant 
+    WaterLily.new
+  end
+end
+
+
+class FrogAlgaePond < Pond 
+  def new_animal(name)
+    Frog.new 
+  end
+
+  def new_plant 
+    Algae.new
+  end
+end
+
+
+
+class Algae 
+  def initialize(name)
+    @name = name 
+  end
+
+  def grow 
+    p "The algaer #{name} grow"
+  end
+
+end
+
+class WaterLily 
+  def initialize(name)
+    @name = name 
+  end
+
+  def grow 
+    p "The WaterLily #{name} grow"
+  end
+
+end
+
+```
+
+
+
 # Chapter 12. Singleton
 
 
