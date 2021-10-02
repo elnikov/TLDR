@@ -1,3 +1,89 @@
+# Chapter 14. Builder 
+
+## problem 
+
+```ruby
+class Computer 
+    attr_accessor :display 
+    attr_reader :motherboard 
+    attr_reader :drivers
+    def initalize(display=:crt, motherboard=Motherboard.new, drivers=[])
+        @motherboard = motherboard
+        @drivers = drivers
+        @display = display
+    end
+end
+
+class CPU 
+end
+
+class BasicCPU 
+end
+
+class TurboCPU 
+end
+
+class Motherboard
+    attr_accessor :cpu 
+    attr_accessor :memory_size 
+    def initalize(cpu=BasicCPU.new, memory_size=1000)
+        @cpu = cpu 
+        @memory_size = memory_size
+    end
+end
+```
+
+## Builder
+
+```ruby 
+class ComputerBuilder
+    attr_reader :computer 
+    def initalize
+        @computer = Computer.new 
+    end
+    def turbo(has_turbo_cpu=true)
+        @computer.motherboard.cpu = TurboCPU.new 
+    end
+    def display=(display)
+        @computer.display=display
+    end
+    def memory_size=(size_in_mb)
+        @computer.motherboard.memory_size = size_in_mb
+    end
+    def add_cd(writer=false)
+        @computer.drives << Driver.new(:cd, 760, writer)
+    end
+end
+
+builder =ComputerBuilder.new 
+builder.turbo 
+builder.add_cd(true)
+```
+
+## Polymorphic Builders
+
+```ruby
+class DesktopBuilder < ComputerBuilder 
+    def initalize
+        @computer = DesktopComputer.new
+    end
+    def display=(display)
+        @display = display
+    end
+end
+
+class LaptopBuilder < ComputerBuilder 
+    def initalize
+        @computer = DesktopComputer.new
+    end
+    def display=(display)
+        @display = display
+    end
+end
+```
+
+## Builder Can ensure Sane Object
+
 # Chapter 13. Factory 
 
 ## The Problem 
