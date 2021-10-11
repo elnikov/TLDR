@@ -1,3 +1,99 @@
+# Chapter 15. Interpreter 
+
+```ruby
+
+require 'find'
+
+class Expression
+end
+
+class All < Expression
+    def evaluate(dir)
+        results =[]
+        Find.find(dir) do |p|
+            next if not File.file?(p)
+            results << p
+        end
+        results
+    end
+end
+
+class FileName < Expression 
+    def initialize(pattern)
+        @pattern=pattern
+    end
+
+    def evaluate(dir)
+        Find.find(dir) do |p| 
+            next if not File.file?(p)
+            name = File.basename(p)
+            results << p if File.fnmatch(@pattern, name)
+        end
+    end
+end
+
+class Bigger < Expression 
+    def initialize(size)
+        @size=size
+    end
+
+    def evaluate(dir)
+        Find.find(dir) do |p| 
+            next if not File.file?(p)
+            name = File.basename(p)
+            results << p if(File.size(p) > @size)
+        end
+    end
+end
+
+
+class Writable < Expression 
+    def evaluate(dir)
+        Find.find(dir) do |p| 
+            next if not File.file?(p)
+            name = File.basename(p)
+            results << p if(File.writable?(p))
+        end
+    end
+end
+
+
+expr_all = All.new 
+files = expr_all.evaluate('*.mp3')
+
+```
+
+```ruby
+class Not < Expression 
+    def initialize(exp)
+        @expression = exp 
+    end
+    def evaluate(dir)
+        All.new.evaluate(dir) - @expression.evaluate(dir)
+    end
+end
+
+
+expr_not_writable = Not.new( Writable.new )
+```
+
+```ruby
+class Or < Expression
+    def evaluate(dir)
+        results1 = @expression1.evaluate(dir)
+        results2 = @expression2.evaluate(dir)
+        (results1 + results2).sort.uniq
+    end
+end
+
+bog_or_mp3 = Or.new(Bigger.new(1024), FileName.new('*.mp3'))
+```
+
+
+## Buiold Parser
+
+
+
 # Chapter 14. Builder 
 
 ## problem 
