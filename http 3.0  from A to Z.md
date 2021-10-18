@@ -235,4 +235,111 @@ However, that doesn’t mean that sequential multiplexing is always the best, be
 https://www.smashingmagazine.com/2021/09/http3-practical-deployment-options-part3/
  
 
+#Changes To Pages And Resources 
 
+If you’re already on HTTP/2, you probably won’t have to change anything to your pages or resources when moving to HTTP/3!
+
+HTTP/3 is really more like HTTP/2-over-QUIC
+high-level features of the two versions have stayed the same
+
+
+## 1. SINGLE CONNECTION
+
+
+The biggest difference between HTTP/1.1 and HTTP/2 was the switch from 6 to 30 parallel TCP connections to a single underlying TCP connection.
+
+##  SERVER SHARDING AND CONNECTION COALESCING
+
+The switch to the single connection set-up was quite difficult in practice because many pages were sharded across different hostnames and even servers (like img1.example.com and img2.example.com). This was because browsers only opened up to six connections for each individual hostname, so having multiple allowed for more connections!
+
+Roughly speaking, if two hostnames resolve to the same server IP (using DNS) and use a similar TLS certificate, then the browser can reuse a single connection even across the two hostnames.
+
+## RESOURCE BUNDLING AND INLINING
+
+## PRIORITIZATION
+
+To be able to download multiple files on a single connection, you need to somehow multiplex them
+
+Sadly, this is something that you, as an average web developer, can’t do much about, because it’s mainly a problem in the browsers and servers themselves. You can, however, try to mitigate the issue by not using too many individual files (which will lower the chances for competing priorities) and by still using (limited) sharding.
+
+Another option is to use various priority-influencing techniques, such as lazy loading, JavaScript async and defer, and resource hints such as preload.
+
+##  SERVER PUSH AND FIRST FLIGHT 
+
+Server push allows a server to send response data without first waiting for a request from the client. Again, this sounds great in theory, and it could be used instead of inlining resources (see above). 
+
+Overall, it’s best not to use it for general web page loading unless you really know what you’re doing, and even then it would probably be a micro-optimization. 
+
+
+Apply most of the typical HTTP/2 recommendations that you find online, but don’t take them to the extreme.
+
+
+# Servers And Networks
+
+https://github.com/lucas-clemente/quic-go
+
+However, many (perhaps most) of these implementations mainly take care of the HTTP/3 and QUIC stuff; they are not really full-fledged web servers by themselves. 
+
+However, while QUIC integrates with TLS 1.3, it uses it in ways much different from how TLS and TCP interact.
+
+# NETWORK CONFIGURATION
+
+ QUIC runs on top of the UDP protocol to make it easier to deploy. 
+ 
+  however, mainly just means that most network devices can parse and understand UDP. Sadly, it does not mean that UDP is universally allowed. Because UDP is often used for attacks and is not critical to normal day-to-day work besides DNS, many (corporate) networks and firewalls block the protocol almost entirely. As such, UDP probably needs to be explicitly allowed to/from your HTTP/3 servers
+  
+ However, many network administrators will not want to just allow UDP wholesale. Instead, they will specifically want to allow QUIC over UDP.
+ 
+  QUIC is almost entirely encrypted. 
+  
+  However, due to QUIC’s encryption, firewalls can do much less of this connection-level tracking logic, and the few bits they can inspect are relatively complex.
+  
+  # Clients And QUIC Discovery 
+  
+  Most of the popular browsers already have (experimental) HTTP/3 support! Specifically
+  
+  https://cloud.netlifyusercontent.com/assets/344dbf88-fdf9-42bb-adb4-46f01eedd629/9d4aedbb-8464-4062-93d4-986989202121/caniuse-h3.png![image](https://user-images.githubusercontent.com/2846153/137770116-5694ea1f-da55-4a43-95e0-59c8f7351beb.png)
+
+
+# ALT-SVC
+
+Even if you’ve set up an HTTP/3-compatible server and are using an updated browser, you might be surprised to find that HTTP/3 isn’t actually being used consistently. To understand why, let’s suppose you’re the browser for a moment. 
+
+
+Now several things can go wrong:
+
+The server might not support QUIC.
+One of the intermediate networks or firewalls might block QUIC and/or UDP completely.
+The handshake packets might be lost in transit.
+
+
+An easy but naïve solution would simply be to open both a QUIC and TCP connection at the same time and then use whichever handshake completes first
+
+As such, for QUIC and HTTP/3, browsers would rather prefer to play it safe and only try QUIC if they know the server supports it. 
+
+This header is called Alt-Svc, which stands for “alternative services”. Alt-Svc can be used to let a browser know that a certain service is also reachable via another server (IP and/or port), but it also allows for the indication of alternative protocols
+
+https://cloud.netlifyusercontent.com/assets/344dbf88-fdf9-42bb-adb4-46f01eedd629/90f995f5-6b02-4884-a602-f5a526fb40e2/facebook-alt-svc.png![image](https://user-images.githubusercontent.com/2846153/137770569-2ea607bb-cad8-4ffe-aa57-e905003fafb0.png)
+
+This means that the browser will only ever use HTTP/3 after it has downloaded at least a few resources via HTTP/2 or HTTP/1.1 first.
+
+There is ongoing work to improve this two-step Alt-Svc process somewhat. The idea is to use new DNS records called SVCB and HTTPS, which will contain information similar to what is in Alt-Svc. As such, the client can discover that a server supports HTTP/3 during the DNS resolution step instead
+
+# ADDITIONAL ISSUES
+
+As if that wasn’t enough, another issue will make local testing more difficult: Chrome makes it very difficult for you to use self-signed TLS certificates for QUIC. 
+
+ This is because non-official TLS certificates are often used by companies to decrypt their employees’ TLS traffic (so that they can, for example, have their firewalls scan inside encrypted traffic). However, if companies would start doing that with QUIC, we would again have custom middlebox implementations that make their own assumptions about the protocol.
+ 
+ If you’re not using an official TLS certificate (signed by a certificate authority or root certificate that is trusted by Chrome, such as Let’s Encrypt), then you cannot use QUIC. 
+ 
+ It is still possible to bypass this with some freaky command-line flags (because the common --ignore-certificate-errors doesn’t work for QUIC yet)
+ 
+ If you are having problems with your QUIC set-up from inside a browser, it’s best to first validate it using a tool such as cURL. cURL has excellent HTTP/3 support (you can even choose between two different underlying libraries) and also makes it easier to observe Alt-Svc caching logic.
+ 
+ # Tools And Testing
+ 
+ Google Lighthouse
+
+ 
+ 
