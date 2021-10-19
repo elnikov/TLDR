@@ -1,3 +1,85 @@
+# Chapter 16. DSL
+
+```ruby
+backup '/home/russ/documents'
+backup '/home/russ/music', file_name('*mp3') & file_name('*wav'), to '/external_drive/backups'
+interval 60
+#User.destroy_all
+```
+
+## Building PackRat
+
+```ruby
+class Backup
+    include Singleton
+    attr_accessor :backup_directory, :interval
+    attr_reader :data_souces
+
+    def initialize
+        @data_souces = []
+        @backup_directory = '/backup'
+        @interval = 60
+    end
+
+    def backup_files 
+        this_backup_dir = time_mark
+        this_backup_path = File.join(backup_directory, this_backup_dir)
+        @data_souces.each {|source| source.backup(this_backup_path)}
+    end
+
+    def run 
+        while true 
+            backup_files
+            sleep(@interval*60)
+        end
+    end
+
+    private 
+
+    def time_mark
+        Time.new.ctime.tr(' :','_')
+    end
+end
+
+class DataSource
+    attr_reader :directory, :finder_expression
+    def initialize(directory, finder_expression)
+        @directory = directory
+        @finder_expression = finder_expression
+    end
+
+    def backup(backup_directory)
+        files = @finder_expression.evaluate(@directory)
+        files.each do |file|
+            backup_file( file. backup_directory)
+        end
+    end
+
+    def  backup_file( path, backup_directory)
+        copy_path = File.join(backup_directory, path)
+        p copy_path
+    end
+end
+
+```
+
+```ruby
+def backup(dir, finder_expression=All.new)
+    Backup.instance.data_sources << DataSource(dir, finder_expression)
+end
+
+def to(backup_directory)
+    Backup.instance.backup_directory = backup_directory 
+end
+
+def interval(minutes)
+    Backup.instance.interval = minutes
+end
+
+eval(File.read('backup.pr'))
+Backup.instance.run
+```
+
 # Chapter 15. Interpreter 
 
 ```ruby
