@@ -31,6 +31,64 @@ plant1 = new_plant(:fleshy, :broad)
 
 ## Module By Module 
 
+```ruby
+module Carnivore
+  def diet 
+    'meat'
+  end
+
+  def teeth
+    'sharp'
+  end
+end
+
+module Hebrivore
+  def diet
+    'plant'
+  end
+  def teeth
+    'flat'
+  end
+end
+
+module Noctural 
+  def sleep_time
+    'day'
+  end
+ def awake_time
+  'night'
+ end
+end
+
+module Diurnal
+  def sleep_time
+    'night'
+  end
+
+  def awake_time
+    'day'
+  end
+end
+
+def new_animal(diet, awake)
+  animmal = Object.new
+
+
+
+  if diet == :meat 
+    animmal.extend(Carnivore)
+  else
+    animmal.extend(Hebrivore)
+  end
+
+  if awake == :day 
+    animmal.extend(Diurnal)
+  else
+    animmal.extend(Noctural)
+  end
+  animal
+end
+```
 
 
 # Chapter 16. DSL
