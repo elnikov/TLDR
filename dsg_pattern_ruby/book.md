@@ -1,3 +1,38 @@
+# Chapter 17. Meta Programming
+
+## Method by Method
+
+```ruby
+def  new_pant(stem_type, leaf_type)
+  plant = Object.new
+
+  if stem_type == :fleshy
+    def plant.stem
+      'fleshy'
+    end
+  else
+    def plant.stem
+      'woody'
+    end
+  end
+  if leaf_type == :broad 
+    def plant.leaf
+      'broad'
+    end
+  else
+    def plant.leaf
+      'needle'
+    end
+  end
+
+end
+plant1 = new_plant(:fleshy, :broad)
+```
+
+## Module By Module 
+
+
+
 # Chapter 16. DSL
 
 ```ruby
